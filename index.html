@@ -277,8 +277,8 @@
 </head>
 <body>
   <div class="container">
-    <h1>Feet/Oz Calculator for ARC nationals</h1>
-    <p class="subtitle">Measures how each ounce of added weight changes launch altitude across test points</p>
+    <h1>Calculator For ARC Nationals</h1>
+    <p class="subtitle">Measures how each ounce of added weight changes launch altitude across test points and then calculates weight needed for target altitude</p>
 
     <div class="formula-box">
       ft / oz = (Altitude B &minus; Altitude A) &divide; (Weight B &minus; Weight A)
@@ -326,7 +326,7 @@
 
       <!-- Target Altitude Predictor -->
       <div class="predictor-box">
-        <p class="predictor-title">🎯 Target Altitude Predictor</p>
+        <p class="predictor-title">Target Altitude Calc</p>
         <p class="predictor-sub">
           Choose a reference point and ft/oz ratio, enter your target altitude, and get the required launch weight.
           <br>Formula: Required Weight = Reference Weight + (Target Alt &minus; Reference Alt) &divide; ft/oz ratio
@@ -353,8 +353,9 @@
           <p class="predict-result-sub"  id="pred-detail"></p>
         </div>
       </div>
+
     </div>
-    <h5>By: zman</h5>
+    <h5>By: zman :D</h5>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
@@ -586,6 +587,9 @@
       const refPt = lastPts[ptIdx];
 
       // Required Weight = Reference Weight + (Target Alt − Reference Alt) / ratio
+      // The sign of (target - refPt.alt) handles direction automatically:
+      //   target > ref → positive → adds weight (going lower needs more weight)
+      //   target < ref → negative → subtracts weight (going higher needs less weight)
       const reqWeight = refPt.wt + (target - refPt.alt) / ratio;
 
       const diffAlt  = target - refPt.alt;
