@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rocket Launch — ft per oz Calculator</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #111111;
+      color: #fdf9e3;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      max-width: 780px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 500;
+      color: #fdf9e3;
+      margin-bottom: 0.25rem;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: #a89f6e;
+      margin-bottom: 1.5rem;
+    }
+
+    .formula-box {
+      background: #1c1c1c;
+      border: 0.5px solid #3a3620;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 12px;
+      color: #c9bc7a;
+      margin-bottom: 1.5rem;
+      font-family: monospace;
+    }
+
+    /* Input cards */
+    .calc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 12px;
+      margin-bottom: 1rem;
+    }
+
+    .point-card {
+      background: #1a1a0f;
+      border: 0.5px solid #3a3620;
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+    }
+
+    .point-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .point-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: #c9bc7a;
+    }
+
+    .remove-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #5a5440;
+      font-size: 16px;
+      padding: 0;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      transition: color 0.12s;
+    }
+
+    .remove-btn:hover { color: #e07070; }
+
+    .field-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 10px;
+    }
+
+    .field-row label { font-size: 12px; color: #7a7055; }
+
+    .field-row input,
+    .field-row select {
+      width: 100%;
+      padding: 8px 10px;
+      font-size: 14px;
+      background: #111111;
+      color: #fdf9e3;
+      border: 0.5px solid #3a3620;
+      border-radius: 8px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .field-row input::placeholder { color: #4a4430; }
+    .field-row input:hover,
+    .field-row select:hover  { border-color: #5a5230; }
+    .field-row input:focus,
+    .field-row select:focus  { border-color: #c9bc7a; box-shadow: 0 0 0 3px rgba(201,188,122,0.15); }
+    .field-row select option { background: #1a1a0f; color: #fdf9e3; }
+
+    /* Add card */
+    .add-card {
+      background: #111111;
+      border: 0.5px dashed #3a3620;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      min-height: 130px;
+      transition: background 0.12s, border-color 0.12s;
+    }
+
+    .add-card:hover { background: #1a1a0f; border-color: #c9bc7a; }
+
+    .add-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      color: #5a5440;
+      font-size: 13px;
+      transition: color 0.12s;
+    }
+
+    .add-card:hover .add-inner { color: #c9bc7a; }
+    .add-plus { font-size: 24px; line-height: 1; }
+
+    /* Buttons */
+    .btn-row { display: flex; gap: 8px; margin-bottom: 1.5rem; margin-top: 0.5rem; flex-wrap: wrap; }
+
+    button {
+      padding: 8px 18px;
+      font-size: 14px;
+      border: 0.5px solid #3a3620;
+      border-radius: 8px;
+      background: transparent;
+      color: #fdf9e3;
+      cursor: pointer;
+      transition: background 0.12s, border-color 0.12s, color 0.12s, transform 0.08s;
+    }
+
+    button:hover  { background: #1a1a0f; border-color: #c9bc7a; color: #c9bc7a; }
+    button:active { transform: scale(0.98); }
+
+    /* Error */
+    .error { font-size: 13px; color: #e07070; padding: 8px 0; }
+
+    /* Summary cards */
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin-bottom: 1.5rem;
+    }
+
+    .metric {
+      background: #1a1a0f;
+      border: 0.5px solid #3a3620;
+      border-radius: 8px;
+      padding: 1rem;
+    }
+
+    .metric-label { font-size: 13px; color: #a89f6e; margin-bottom: 4px; }
+    .metric-value { font-size: 22px; font-weight: 500; color: #fdf9e3; }
+    .metric-sub   { font-size: 11px; color: #5a5440; margin-top: 4px; }
+
+    .section-head { font-size: 13px; font-weight: 500; color: #a89f6e; margin-bottom: 8px; }
+
+    .divider { border: none; border-top: 0.5px solid #3a3620; margin: 1.5rem 0; }
+
+    /* Table */
+    .table-wrap {
+      background: #1a1a0f;
+      border: 0.5px solid #3a3620;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
+
+    th {
+      background: #111111;
+      color: #a89f6e;
+      font-weight: 500;
+      padding: 8px 12px;
+      text-align: left;
+      border-bottom: 0.5px solid #3a3620;
+    }
+
+    td {
+      padding: 8px 12px;
+      border-bottom: 0.5px solid #2a2510;
+      color: #fdf9e3;
+      word-break: break-word;
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #1f1f12; }
+
+    /* Chart */
+    #chart-wrap {
+      position: relative;
+      width: 100%;
+      height: 240px;
+      margin-bottom: 1.5rem;
+    }
+
+    /* Predictor */
+    .predictor-box {
+      background: #1a1a0f;
+      border: 0.5px solid #3a3620;
+      border-radius: 12px;
+      padding: 1.25rem;
+    }
+
+    .predictor-title { font-size: 14px; font-weight: 500; color: #c9bc7a; margin-bottom: 4px; }
+    .predictor-sub   { font-size: 12px; color: #7a7055; margin-bottom: 1rem; }
+
+    .predictor-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      align-items: end;
+      margin-bottom: 1rem;
+    }
+
+    .predict-btn {
+      width: 100%;
+      padding: 10px;
+      font-size: 14px;
+      border: 0.5px solid #c9bc7a;
+      border-radius: 8px;
+      background: transparent;
+      color: #c9bc7a;
+      cursor: pointer;
+      transition: background 0.12s, transform 0.08s;
+    }
+
+    .predict-btn:hover  { background: rgba(201,188,122,0.1); }
+    .predict-btn:active { transform: scale(0.98); }
+
+    .predict-result {
+      background: #111111;
+      border: 0.5px solid #3a3620;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: 1rem;
+      display: none;
+    }
+
+    .predict-result-label { font-size: 12px; color: #7a7055; margin-bottom: 4px; }
+    .predict-result-value { font-size: 32px; font-weight: 500; color: #c9bc7a; }
+    .predict-result-sub   { font-size: 12px; color: #5a5440; margin-top: 6px; line-height: 1.6; }
+
+    .predict-error { font-size: 13px; color: #e07070; margin-top: 8px; display: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Feet/Oz Calculator for ARC nationals</h1>
+    <p class="subtitle">Measures how each ounce of added weight changes launch altitude across test points</p>
+
+    <div class="formula-box">
+      ft / oz = (Altitude B &minus; Altitude A) &divide; (Weight B &minus; Weight A)
+    </div>
+
+    <div class="calc-grid" id="points-grid"></div>
+
+    <div class="btn-row">
+      <button onclick="calculate()">Calculate</button>
+      <button onclick="resetAll()">Reset</button>
+    </div>
+
+    <div class="error" id="error" style="display:none;"></div>
+
+    <div id="results" style="display:none;">
+
+      <!-- Summary cards -->
+      <div class="result-grid" id="summary-cards"></div>
+
+      <!-- Pairs table -->
+      <p class="section-head">Pairwise ft / oz (&Delta; altitude &divide; &Delta; weight)</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:18%">Pair</th>
+              <th style="width:20%">&Delta; Alt (ft)</th>
+              <th style="width:20%">&Delta; Wt (oz)</th>
+              <th style="width:16%">ft / oz</th>
+              <th>Meaning</th>
+            </tr>
+          </thead>
+          <tbody id="result-table"></tbody>
+        </table>
+      </div>
+
+      <!-- Chart -->
+      <div id="chart-wrap">
+        <canvas id="myChart" role="img" aria-label="Bar chart of ft per oz for each pair of data points.">
+          Ft per oz values across all point pairs.
+        </canvas>
+      </div>
+
+      <hr class="divider" />
+
+      <!-- Target Altitude Predictor -->
+      <div class="predictor-box">
+        <p class="predictor-title">🎯 Target Altitude Predictor</p>
+        <p class="predictor-sub">
+          Choose a reference point and ft/oz ratio, enter your target altitude, and get the required launch weight.
+          <br>Formula: Required Weight = Reference Weight + (Target Alt &minus; Reference Alt) &divide; ft/oz ratio
+        </p>
+        <div class="predictor-row">
+          <div class="field-row" style="margin:0;">
+            <label for="pred-point">Reference point</label>
+            <select id="pred-point"></select>
+          </div>
+          <div class="field-row" style="margin:0;">
+            <label for="pred-ratio">ft / oz ratio to use</label>
+            <select id="pred-ratio"></select>
+          </div>
+          <div class="field-row" style="margin:0;">
+            <label for="pred-target">Target altitude (ft)</label>
+            <input type="number" id="pred-target" placeholder="e.g. 2000" step="any" />
+          </div>
+        </div>
+        <button class="predict-btn" onclick="predict()">Calculate Required Weight</button>
+        <div class="predict-error" id="pred-error"></div>
+        <div class="predict-result" id="pred-result">
+          <p class="predict-result-label">Required launch weight</p>
+          <p class="predict-result-value" id="pred-value">—</p>
+          <p class="predict-result-sub"  id="pred-detail"></p>
+        </div>
+      </div>
+    </div>
+    <h5>By: zman</h5>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <script>
+    const COLORS = ['#c9bc7a','#e8d98a','#a89f6e','#f0e89a','#8a8058','#d4c870','#7a7050','#b8aa60'];
+    let points    = [{ id: 1 }, { id: 2 }];
+    let nextId    = 3;
+    let chartInst = null;
+    let lastPts   = [];
+
+    // ── Build input cards ──────────────────────────────────────────
+    function renderGrid() {
+      const grid = document.getElementById('points-grid');
+      grid.innerHTML = '';
+
+      points.forEach((p, idx) => {
+        const card = document.createElement('div');
+        card.className = 'point-card';
+        card.innerHTML = `
+          <div class="point-header">
+            <span class="point-label">Point ${idx + 1}</span>
+            ${points.length > 2
+              ? `<button class="remove-btn" onclick="removePoint(${p.id})" aria-label="Remove point ${idx + 1}">&#x2715;</button>`
+              : ''}
+          </div>
+          <div class="field-row">
+            <label for="alt-${p.id}">Altitude (ft)</label>
+            <input type="number" id="alt-${p.id}" placeholder="e.g. 1000" step="any"
+              value="${p.alt !== undefined ? p.alt : ''}"
+              oninput="saveVal(${p.id}, 'alt', this.value)" />
+          </div>
+          <div class="field-row">
+            <label for="wt-${p.id}">Weight (oz)</label>
+            <input type="number" id="wt-${p.id}" placeholder="e.g. 16" step="any"
+              value="${p.wt !== undefined ? p.wt : ''}"
+              oninput="saveVal(${p.id}, 'wt', this.value)" />
+          </div>`;
+        grid.appendChild(card);
+      });
+
+      const addCard = document.createElement('div');
+      addCard.className = 'add-card';
+      addCard.setAttribute('role', 'button');
+      addCard.setAttribute('aria-label', 'Add data point');
+      addCard.onclick = addPoint;
+      addCard.innerHTML = `
+        <div class="add-inner">
+          <span class="add-plus">+</span>
+          <span>Add point</span>
+        </div>`;
+      grid.appendChild(addCard);
+    }
+
+    function saveVal(id, field, val) {
+      const p = points.find(p => p.id === id);
+      if (p) p[field] = val === '' ? undefined : parseFloat(val);
+    }
+
+    function addPoint() {
+      points.push({ id: nextId++ });
+      renderGrid();
+    }
+
+    function removePoint(id) {
+      points = points.filter(p => p.id !== id);
+      renderGrid();
+      document.getElementById('results').style.display = 'none';
+      document.getElementById('error').style.display   = 'none';
+    }
+
+    // ── Main calculation ───────────────────────────────────────────
+    function calculate() {
+      const errEl = document.getElementById('error');
+      errEl.style.display = 'none';
+
+      const pts = points.map((p, i) => ({
+        alt:   p.alt,
+        wt:    p.wt,
+        label: `P${i + 1}`
+      }));
+
+      if (pts.some(p => p.alt === undefined || p.wt === undefined || isNaN(p.alt) || isNaN(p.wt))) {
+        errEl.textContent = 'Please fill in all altitude and weight fields before calculating.';
+        errEl.style.display = 'block';
+        document.getElementById('results').style.display = 'none';
+        return;
+      }
+
+      lastPts = pts;
+
+      // All pairwise combinations
+      const pairs = [];
+      for (let i = 0; i < pts.length; i++) {
+        for (let j = i + 1; j < pts.length; j++) {
+          const dAlt  = pts[j].alt - pts[i].alt;
+          const dWt   = pts[j].wt  - pts[i].wt;
+          const ratio = dWt === 0 ? null : dAlt / dWt;
+          pairs.push({ label: `${pts[i].label}→${pts[j].label}`, dAlt, dWt, ratio });
+        }
+      }
+
+      const valid     = pairs.filter(r => r.ratio !== null);
+      const ratioVals = valid.map(r => r.ratio);
+
+      if (valid.length === 0) {
+        errEl.textContent = 'All pairs have the same weight — cannot compute a rate of change.';
+        errEl.style.display = 'block';
+        document.getElementById('results').style.display = 'none';
+        return;
+      }
+
+      const avg  = ratioVals.reduce((a, b) => a + b, 0) / ratioVals.length;
+      const maxR = Math.max(...ratioVals);
+      const minR = Math.min(...ratioVals);
+
+      // Summary cards
+      document.getElementById('summary-cards').innerHTML = `
+        <div class="metric">
+          <p class="metric-label">Average ft / oz</p>
+          <p class="metric-value">${avg.toFixed(2)}</p>
+          <p class="metric-sub">across ${valid.length} pair${valid.length !== 1 ? 's' : ''}</p>
+        </div>
+        <div class="metric">
+          <p class="metric-label">Best ratio</p>
+          <p class="metric-value">${maxR.toFixed(2)}</p>
+          <p class="metric-sub">${valid[ratioVals.indexOf(maxR)].label}</p>
+        </div>
+        <div class="metric">
+          <p class="metric-label">Worst ratio</p>
+          <p class="metric-value">${minR.toFixed(2)}</p>
+          <p class="metric-sub">${valid[ratioVals.indexOf(minR)].label}</p>
+        </div>`;
+
+      // Pairs table
+      const tbody = document.getElementById('result-table');
+      tbody.innerHTML = '';
+      pairs.forEach(r => {
+        const meaning = r.ratio === null
+          ? 'Same weight'
+          : r.ratio < 0
+            ? `+1 oz → ${Math.abs(r.ratio).toFixed(1)} ft lower`
+            : `+1 oz → ${r.ratio.toFixed(1)} ft higher`;
+        tbody.innerHTML += `
+          <tr>
+            <td style="font-weight:500;">${r.label}</td>
+            <td>${r.dAlt >= 0 ? '+' : ''}${r.dAlt.toLocaleString()}</td>
+            <td>${r.dWt  >= 0 ? '+' : ''}${r.dWt.toFixed(2)}</td>
+            <td style="font-weight:500;">${r.ratio === null ? 'N/A' : r.ratio.toFixed(2)}</td>
+            <td style="font-size:12px; color:#a89f6e;">${meaning}</td>
+          </tr>`;
+      });
+
+      // Chart
+      if (chartInst) chartInst.destroy();
+      chartInst = new Chart(document.getElementById('myChart'), {
+        type: 'bar',
+        data: {
+          labels: pairs.map(r => r.label),
+          datasets: [{
+            label: 'ft / oz',
+            data: pairs.map(r => r.ratio === null ? 0 : parseFloat(r.ratio.toFixed(4))),
+            backgroundColor: pairs.map((_, i) => COLORS[i % COLORS.length]),
+            borderRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: { label: ctx => ` ${ctx.parsed.y.toFixed(2)} ft / oz` },
+              backgroundColor: '#1a1a0f',
+              titleColor: '#fdf9e3',
+              bodyColor: '#c9bc7a',
+              borderColor: '#3a3620',
+              borderWidth: 1
+            }
+          },
+          scales: {
+            x: { grid: { display: false }, ticks: { color: '#a89f6e', autoSkip: false, maxRotation: 30 } },
+            y: {
+              grid: { color: '#2a2510' },
+              ticks: { color: '#a89f6e' },
+              title: { display: true, text: 'ft / oz', font: { size: 12 }, color: '#a89f6e' }
+            }
+          }
+        }
+      });
+
+      // Populate predictor dropdowns
+      const ptSel = document.getElementById('pred-point');
+      ptSel.innerHTML = pts.map((p, i) =>
+        `<option value="${i}">Point ${i + 1} — ${p.alt.toLocaleString()} ft, ${p.wt} oz</option>`
+      ).join('');
+
+      const ratSel = document.getElementById('pred-ratio');
+      ratSel.innerHTML =
+        valid.map(r => `<option value="${r.ratio}">${r.label}: ${r.ratio.toFixed(2)} ft/oz</option>`).join('') +
+        `<option value="${avg}">Average: ${avg.toFixed(2)} ft/oz</option>`;
+
+      document.getElementById('pred-result').style.display = 'none';
+      document.getElementById('pred-error').style.display  = 'none';
+      document.getElementById('results').style.display = 'block';
+    }
+
+    // ── Predictor ──────────────────────────────────────────────────
+    function predict() {
+      const predErr = document.getElementById('pred-error');
+      const predRes = document.getElementById('pred-result');
+      predErr.style.display = 'none';
+      predRes.style.display = 'none';
+
+      const ptIdx  = parseInt(document.getElementById('pred-point').value);
+      const ratio  = parseFloat(document.getElementById('pred-ratio').value);
+      const target = parseFloat(document.getElementById('pred-target').value);
+
+      if (isNaN(target)) {
+        predErr.textContent = 'Please enter a target altitude.';
+        predErr.style.display = 'block';
+        return;
+      }
+      if (ratio === 0) {
+        predErr.textContent = 'The selected ratio is 0 — cannot solve for weight with a zero rate.';
+        predErr.style.display = 'block';
+        return;
+      }
+
+      const refPt = lastPts[ptIdx];
+
+      // Required Weight = Reference Weight + (Target Alt − Reference Alt) / ratio
+      const reqWeight = refPt.wt + (target - refPt.alt) / ratio;
+
+      const diffAlt  = target - refPt.alt;
+      const diffWt   = reqWeight - refPt.wt;
+      const altDir   = diffAlt >= 0 ? 'higher' : 'lower';
+      const wtChange = diffWt  >= 0
+        ? `${diffWt.toFixed(3)} oz heavier than`
+        : `${Math.abs(diffWt).toFixed(3)} oz lighter than`;
+
+      document.getElementById('pred-value').textContent  = `${reqWeight.toFixed(3)} oz`;
+      document.getElementById('pred-detail').textContent =
+        `Reference: Point ${ptIdx + 1} at ${refPt.alt.toLocaleString()} ft, ${refPt.wt} oz\n` +
+        `Target is ${Math.abs(diffAlt).toLocaleString()} ft ${altDir} → rocket needs to be ${wtChange} the reference point.`;
+
+      predRes.style.display = 'block';
+    }
+
+    // ── Reset ──────────────────────────────────────────────────────
+    function resetAll() {
+      points = [{ id: 1 }, { id: 2 }];
+      nextId = 3;
+      lastPts = [];
+      renderGrid();
+      document.getElementById('results').style.display = 'none';
+      document.getElementById('error').style.display   = 'none';
+      if (chartInst) { chartInst.destroy(); chartInst = null; }
+    }
+
+    renderGrid();
+  </script>
+</body>
+</html>
